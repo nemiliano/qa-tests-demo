@@ -1,0 +1,27 @@
+<div>POST to http://127.0.0.1:36559/api/reservas</div>
+
+    <h4>Body</h4>
+    <div>
+    <pre class="preformated-text">
+{
+    &quot;noches&quot;: 3,
+    &quot;huesped&quot;: &quot;Joel-d170d59f&quot;
+}    </pre>
+    </div>
+
+    <h4>Headers</h4>
+    <div>
+            <div>Accept: application/json</div>
+            <div>Content-Type: application/json</div>
+    </div>
+
+
+
+    <h4>Curl</h4>
+    <div>
+        curl -v -X POST &#39;http://127.0.0.1:36559/api/reservas&#39; -H &#39;Accept: application/json&#39; -H &#39;Content-Type: application/json&#39; -d &#39;{
+    &quot;noches&quot;: 3,
+    &quot;huesped&quot;: &quot;Joel-d170d59f&quot;
+}&#39;
+    </div>
+

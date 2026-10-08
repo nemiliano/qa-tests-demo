@@ -14,7 +14,8 @@ Proyecto de práctica que **consume** [`qa-framework-core`](../qa-framework-core
 |---|---|---|---|
 | UI Selenium | `ShoppingSeleniumTest` | saucedemo | `ui` `selenium` `smoke` |
 | UI Playwright (**mismo escenario**) | `ShoppingPlaywrightTest` | saucedemo | `ui` `playwright` `smoke` |
-| Data-driven (CSV + "Caso de prueba") | `LoginDataDrivenTest` | saucedemo | `ui` `playwright` `regression` |
+| Data-driven (CSV + "Caso de prueba") con **Playwright** | `LoginDataDrivenTest` | saucedemo | `ui` `playwright` `regression` |
+| Data-driven con **Selenium** (mismo CSV) | `LoginDataDrivenSeleniumTest` | saucedemo | `ui` `selenium` `regression` |
 | API | `RestfulBookerApiTest` | restful-booker | `api` (`smoke` / `regression`) |
 | API + UI | `ReservaApiUiTest` | app local | `api` `ui` `playwright` `regression` |
 | Validación en DB | `ReservaDbTest` | app local (H2) | `api` `db` `regression` |

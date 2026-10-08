@@ -1,0 +1,97 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 9 * * 1-5'   # regresión de lunes a viernes, 09:00 UTC (06:00 Argentina)
+  workflow_dispatch:
+    inputs:
+      tags:
+        description: 'Expresión de tags a ejecutar (ej: smoke, regression, "api & ui")'
+        required: true
+        default: 'smoke | regression'
+
+permissions:
+  contents: write   # publicar el reporte en la rama gh-pages
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      # push y PR: solo smoke. Programado: regresión completa. Manual: lo que se elija.
+      TAGS: ${{ github.event_name == 'workflow_dispatch' && inputs.tags || (github.event_name == 'schedule' && 'smoke | regression' || 'smoke') }}
+    steps:
+      - uses: actions/checkout@v7
+
+      # El demo consume el framework. Se compila desde su repo (público) para no
+      # depender de permisos de GitHub Packages entre repositorios.
+      - uses: actions/checkout@v7
+        with:
+          repository: nemiliano/qa-framework-core
+          path: core
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+      - name: Instalar qa-framework-core
+        working-directory: core
+        run: ./mvnw -B -q install -DskipTests
+      - name: Instalar Chromium de Playwright
+        working-directory: core
+        run: >
+          ./mvnw -B -q -pl ui-playwright exec:java
+          -Dexec.mainClass=com.microsoft.playwright.CLI
+          "-Dexec.args=install --with-deps chromium"
+
+      - name: Ejecutar tests (${{ env.TAGS }})
+        run: ./mvnw -B verify "-Dgroups=${TAGS}"
+
+      # ---- Evidencias y reporte (también cuando hay fallos) ----
+      - name: Guardar resultados y evidencias
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: resultados
+          path: |
+            target/allure-results
+            target/evidence
+            target/surefire-reports
+          if-no-files-found: ignore
+
+      - name: Preparar rama gh-pages (con el historial de ejecuciones anteriores)
+        if: always() && github.event_name != 'pull_request'
+        run: |
+          REPO_URL="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git"
+          if git ls-remote --exit-code --heads "$REPO_URL" gh-pages >/dev/null 2>&1; then
+            git clone --depth 1 --branch gh-pages "$REPO_URL" site
+          else
+            mkdir site && git -C site init -q -b gh-pages && git -C site remote add origin "$REPO_URL"
+          fi
+          # El historial permite ver la tendencia entre ejecuciones en Allure
+          if [ -d site/history ]; then cp -r site/history target/allure-results/history; fi
+
+      - name: Generar el reporte Allure
+        if: always() && github.event_name != 'pull_request'
+        run: ./mvnw -B allure:report
+
+      - name: Publicar el reporte en GitHub Pages
+        if: always() && github.event_name != 'pull_request'
+        run: |
+          cd site
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -r ../target/site/allure-maven-plugin/. .
+          touch .nojekyll
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Reporte Allure: ${GITHUB_SHA::7} (${TAGS})" || echo "Sin cambios"
+          git push origin gh-pages

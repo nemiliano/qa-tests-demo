@@ -37,7 +37,18 @@ Con propiedades o variables de ambiente se cambia el comportamiento (ver el READ
 $env:HEADLESS="false"; .\mvnw.cmd test                # igual, con variable de ambiente
 ```
 
-## Reporte Allure
+## CI (GitHub Actions) y reporte publicado
+**Reporte en línea: https://nemiliano.github.io/qa-tests-demo/** (se actualiza en cada ejecución, con historial y tendencia).
+
+| Cuándo | Qué corre |
+|---|---|
+| Push y Pull Request a `main` | `smoke` |
+| Lunes a viernes 09:00 UTC (programado) | `smoke \| regression` |
+| Manual (Actions > Tests > Run workflow) | la expresión de tags que elijas |
+
+El workflow compila `qa-framework-core` desde su repo, instala Chromium, corre los tests, guarda `allure-results` y evidencias como artefactos y publica el reporte en la rama `gh-pages` (GitHub Pages). En un Pull Request no se publica el reporte, pero sí se corren los tests.
+
+## Reporte Allure (en tu PC)
 Cada ejecución deja `target/allure-results` (con categorías de fallos e info de ambiente). Para verlo:
 ```powershell
 .\mvnw.cmd allure:serve      # genera y abre el reporte en el navegador

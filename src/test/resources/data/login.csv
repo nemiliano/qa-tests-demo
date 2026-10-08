@@ -1,0 +1,5 @@
+Caso de prueba,usuario,clave,exito,resultadoEsperado
+Usuario estándar accede al inventario,standard_user,secret_sauce,true,Products
+Usuario bloqueado no puede ingresar,locked_out_user,secret_sauce,false,"Epic sadface: Sorry, this user has been locked out."
+Clave incorrecta es rechazada,standard_user,clave_mala,false,Epic sadface: Username and password do not match any user in this service
+Usuario vacío es rechazado,,secret_sauce,false,Epic sadface: Username is required

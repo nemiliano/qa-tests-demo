@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Fallo de aserción (posible defecto del producto)",
+    "matchedStatuses": ["failed"]
+  },
+  {
+    "name": "Datos de prueba inválidos",
+    "matchedStatuses": ["broken"],
+    "messageRegex": ".*(DataException|archivo de datos|Caso de prueba).*"
+  },
+  {
+    "name": "Problema de infraestructura (timeout / red / navegador)",
+    "matchedStatuses": ["broken"],
+    "messageRegex": ".*(Timeout|timeout|net::ERR|Connection|ConnectException|SessionNotCreated).*"
+  },
+  {
+    "name": "Otros errores del test",
+    "matchedStatuses": ["broken"]
+  }
+]

@@ -13,6 +13,11 @@ on:
         description: 'Expresión de tags a ejecutar (ej: smoke, regression, "api & ui")'
         required: true
         default: 'smoke | regression'
+      include_demo_failures:
+        description: 'Incluir los tests que fallan a propósito (para ver un reporte con errores)'
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: write   # publicar el reporte en la rama gh-pages
@@ -53,7 +58,18 @@ jobs:
           "-Dexec.args=install --with-deps chromium"
 
       - name: Ejecutar tests (${{ env.TAGS }})
-        run: ./mvnw -B verify "-Dgroups=${TAGS}"
+        env:
+          INCLUDE_FAILURES: ${{ inputs.include_demo_failures }}
+        run: |
+          GROUPS_EXPR="$TAGS"
+          EXCLUDED="demo-failure"
+          # Los tests que fallan a propósito están excluidos salvo pedido explícito (ejecución manual)
+          if [ "$INCLUDE_FAILURES" = "true" ]; then
+            GROUPS_EXPR="($TAGS) | demo-failure"
+            EXCLUDED="none"
+          fi
+          echo "Tags: $GROUPS_EXPR | excluidos: $EXCLUDED"
+          ./mvnw -B verify "-Dgroups=${GROUPS_EXPR}" "-DexcludedGroups=${EXCLUDED}"
 
       # ---- Evidencias y reporte (también cuando hay fallos) ----
       - name: Guardar resultados y evidencias
